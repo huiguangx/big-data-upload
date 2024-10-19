@@ -5,15 +5,17 @@
  */
 import { WorkerPoolForMd5s } from "./workerpoolformd5s";
 export class WorkerService {
-  readonly MAX_WORKERS = 8;
+  readonly MAX_WORKERS = 12;
   md5SingleWorkerPool: WorkerPoolForMd5s | undefined;
 
   // 计算所有分片的 MD5
   async getMD5ForFiles(chunks: ArrayBuffer[]): Promise<String[]> {
     if (this.md5SingleWorkerPool === undefined) {
-      this.md5SingleWorkerPool = new WorkerPoolForMd5s(this.MAX_WORKERS);
+      this.md5SingleWorkerPool = new WorkerPoolForMd5s(
+        this.MAX_WORKERS,
+        "./md5.worker.ts"
+      );
     }
-    console.log(66666);
     return await this.md5SingleWorkerPool.exec<string>(chunks);
   }
 }

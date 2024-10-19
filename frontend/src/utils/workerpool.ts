@@ -1,7 +1,7 @@
 import { WorkerWrapper } from "./workerWrapper";
 import { StatusEnum } from "./workerWrapper";
 
-// 使用自定义的 Subject 来代替 BehaviorSubject
+// 发布订阅
 class Subject<T> {
   private listeners: Array<(value: T) => void> = [];
   private currentValue: T;
@@ -27,18 +27,31 @@ class Subject<T> {
   }
 }
 
+// 管理WebWorker
 export abstract class SimpleWorkerPool {
-  pool: WorkerWrapper[] = [];
-  maxWorkerCount: number;
-  curRunningCount = new Subject(0); // 使用自定义的 Subject
+  pool: WorkerWrapper[] = []; // Worker池
+  maxWorkerCount: number; // 最大并发数
+  curRunningCount = new Subject(0); // 使用自定义的 Subject 跟踪当前运行Worker
   results: any[] = [];
 
-  protected constructor(maxWorkers = navigator.hardwareConcurrency || 4) {
+  protected constructor(
+    maxWorkers = navigator.hardwareConcurrency || 4,
+    url: string
+  ) {
     this.maxWorkerCount = maxWorkers;
+    this.pool = Array.from({ length: maxWorkers }).map(
+      () =>
+        new WorkerWrapper(
+          new Worker(new URL(url, import.meta.url), {
+            type: "module", // 这里指定 Web Worker 的类型为 module
+          })
+        )
+    );
   }
 
   exec<T>(params: ArrayBuffer[]) {
     this.results.length = 0;
+    console.log(this.pool.length, "this.pool");
     const workerParams = params.map((param, index) => ({ data: param, index }));
 
     return new Promise<T[]>((rs) => {

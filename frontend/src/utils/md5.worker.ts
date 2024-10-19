@@ -1,26 +1,12 @@
 // md5.worker.ts
 /// <reference lib="webworker" />
 import SparkMD5 from "spark-md5";
-
-export enum WorkerLabelsEnum {
-  INIT,
-  CHUNK,
-  DONE,
-}
-
-export class WorkerMessage<T = any> {
-  label: WorkerLabelsEnum;
-  content?: T;
-
-  constructor(label: WorkerLabelsEnum, content?: T) {
-    this.label = label;
-    this.content = content;
-  }
-}
+import { WorkerMessage } from "./workermessage";
+import { WorkerLabelsEnum } from "./types/workerlableenum";
 
 addEventListener("message", ({ data }: { data: ArrayBuffer }) => {
   const hash = SparkMD5.ArrayBuffer.hash(data);
-
+  console.log(hash, "hash");
   postMessage(
     new WorkerMessage(WorkerLabelsEnum.DONE, {
       result: hash,
